@@ -3,6 +3,7 @@ using FitnessApi.Models.database;
 using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Migrations;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -28,28 +29,45 @@ namespace FitnessApi.Controllers
         {
             return db.Programs.Find(id);
         }
-        [Route("api/SelectProgram")]
+        [Route("api/Program/SelectProgram")]
         [HttpPost]
-        public void SelectProgram(Guid id)
+        public void SelectProgram([FromBody]getID ID)
         {
             string currentUserId = User.Identity.GetUserId();
             ApplicationUser currentUser = db.Users.FirstOrDefault(x => x.Id == currentUserId);
-            currentUser.Fk_Program = id;
+            currentUser.Fk_Program = ID.Id;
+            db.Users.AddOrUpdate(currentUser);
+            db.SaveChanges();
         }
-
+        public class getID
+        {
+            public Guid Id { get; set; }
+        }
         [Route("api/GetProgramForUser")]
         [HttpGet]
-        [Authorize]
+
         public Program GetProgramForUser()
         {
+
             string currentUserId = User.Identity.GetUserId();
             ApplicationUser currentUser = db.Users.FirstOrDefault(x => x.Id == currentUserId);
-            return db.Programs.Where(p => p.Id == currentUser.Fk_Program).FirstOrDefault();
+            var res = db.Programs.Where(p => p.Id == currentUser.Fk_Program).FirstOrDefault();
+            foreach (var bla in res.Sessions)
+            {
+                bla.Program = null;
+                bla.Exercises = db.PlannedExercises.Where(p => p.Fk_Session == bla.Id).ToList();
+                foreach (var Exercise in bla.Exercises)
+                {
+                    Exercise.Session = null;
+                }
+            }
+            return res;
         }
 
         // POST: api/Program
         public Guid Post([FromBody]Program newProgram)
         {
+
             var programToSave = new Program()
             {
                 Description = newProgram.Description,

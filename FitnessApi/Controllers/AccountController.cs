@@ -23,6 +23,9 @@ namespace FitnessApi.Controllers
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
+        ApplicationDbContext db = new ApplicationDbContext();
+
+
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
 
@@ -33,6 +36,7 @@ namespace FitnessApi.Controllers
         public AccountController(ApplicationUserManager userManager,
             ISecureDataFormat<AuthenticationTicket> accessTokenFormat)
         {
+            
             UserManager = userManager;
             AccessTokenFormat = accessTokenFormat;
         }
@@ -329,6 +333,7 @@ namespace FitnessApi.Controllers
             }
 
             var user = new ApplicationUser() { UserName = model.Email, Email = model.Email };
+            
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
 
